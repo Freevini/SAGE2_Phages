@@ -6,22 +6,22 @@ date: "20/03/2020"
 output: html_document
 ---
 ```{r setup ,echo=FALSE}
-knitr::opts_chunk$set(message=FALSE, echo=FALSE, eval=FALSE)
+knitr::opts_chunk$set(message=FALSE, echo=FALSE, eval=FALSE,warning = FALSE)
 
 ```
 
 ## Introduction
 
-Bacteriophages are the top predators in the bacterial world. They infect and thereby shape the diversity of the micorbial community. This is comparable to the introduction of top predators such as wolfes and bares in the Yosemite national park. 
+Bacteriophages are the top predators in the bacterial world. They infect bacteria and shape the diversity of the micorbial community. This is comparable to the introduction of top predators such as wolfes and bares in the Yosemite national park. 
 
-Phages not only infect bacteria but they can also have a different functions on their host hosts. For example they can effect the course of the bacterial infection . In fact, based onevolutionary  reasoning,  prophages  are  postulated  to  con-tribute genes that increase the fitness of lysogenic bacteriain  their  specific  ecological  niche 
+Phages not only infect bacteria but they can also have a different functions on their host hosts. For example they can effect the course of the bacterial infection. In fact, based on evolutionary  reasoning,  prophages  are  postulated  to  con-tribute genes that increase the fitness of lysogenic bacteria  their  specific  ecological  niche. 
 
-Phages can have different life cycles. The most well know are the lytic and lysogenic life cycle of phages. in the lytic cycle the phage absorbes, 
+Phages can have different life cycles. The most well know are the lytic and lysogenic life cycle of phages. in the lysogenic cycle the phage inserts into the host genome and can actively transcribe or excise out of the host again. On the other hand lytic phages do not insert and replicate within the cell without entering the genome. 
 
 ![The two main life cyles of phages. source Wikipedia](Phage_life_cycle_life_cycle.jpeg){ width=50% }
 
 
-Phage taxonomy is not very simple, because phages evolve very quickly and the diversity is tremendously large. It is hard to find commonalities to compare the phages. Therefore phages are originally identified based on the phage lytic functions and particle structure. On the other hand people try to infer molecular phylogenic trees from the few common genes. The Institute that organises the naming of phages is the [International Committee on the Taxonomy of Viruses](https://talk.ictvonline.org/).
+Phage evolve very quickly and the diversity is tremendously large, thereby the taxonomy is not very simple. It is hard to find commonalities over all phage genomes. Therefore phages are originally identified based on the phage lytic functions, particle structure and nucleotide structure. On the other hand people try to infer molecular phylogenic trees from the few common genes. The Institute that organises the naming of phages is the [International Committee on the Taxonomy of Viruses](https://talk.ictvonline.org/).
 
 Here, we look at the diversity Phages in the assembled Bifido bacteria from social Bees. 
 We have two main areas we are focusing on:
@@ -30,13 +30,14 @@ We have two main areas we are focusing on:
 
 We first start of by looking for prophages within the Bifido bacteria. Prophages are phages that have inserted into the bacterial genomes and piggyback for a while. From time to time they replicate and lyse the bacterial cell by bursting. 
 
-## Prophage detection
+## File preperation
 
-Here, we aim to annotate Prophages or temperate phages in the bacterial genome. There are multiple different tool to do this. Among the most common ones are: [Phaster](https://phaster.ca/),
+Before we however get going we started of prepering the different genome files for the tools we are intending to use. 
+To keep it simple I am also reducing the headers of the genome files to a minimum. 
 
-Here we use the online version of [Phaster](https://phaster.ca/)
 
-```{bash preparation }
+
+```{bash }
 ##----------------------------
 ##---Transfer to bigmachine
 ##This is onyl relevant for Vincent Somerville
@@ -71,8 +72,9 @@ echo -e "merge " ${genomesss}
 sed -e "s/>/>${genomesss}_/g" /data/Project/Bifidos/Genome_dataset/${genomesss}/${genomesss}.fna >> /data/Project/Bifidos/Genome_dataset/all_Bifido_Genomes/all_Bifido_genomes_merged_fasta
 
 sed -e "s/>/>${genomesss}_/g" /data/Project/Bifidos/Genome_dataset/${genomesss}/${genomesss}.fna |sed 's/ /_/g' > /data/Project/Bifidos/Genome_dataset/${genomesss}/${genomesss}_renamed.fna
-
+##----------------------------
 ###--shortening contig names
+##----------------------------
 cat /data/Project/Bifidos/Genome_dataset/${genomesss}/${genomesss}_renamed.fna > /data/Project/Bifidos/Genome_dataset/${genomesss}/${genomesss}_renamedContigs.fna
 for contigzzz in $(grep ">" /data/Project/Bifidos/Genome_dataset/${genomesss}/${genomesss}_renamed.fna)
 do
@@ -92,7 +94,23 @@ genomesss=2788500098
 sed -e "s/>/>${genomesss}_/g" /data/Project/Bifidos/Genome_dataset/${genomesss}/${genomesss}.fna > /data/Project/Bifidos/Genome_dataset/${genomesss}/${genomesss}_renamed.fna
 
 scp vincent@130.223.51.116:/data/Project/Bifidos/Genome_dataset/2788500098/2788500098_renamed.fna /home/vincent/Desktop/Projects/Bifidos/Genome_dataset/IMG_2788500098/2788500098_renamed.fna
+```
+## Prophage detection
 
+Here, we aim to annotate Prophages or temperate phages in the bacterial genome. There are multiple different tool to do this. Among the most common ones are: 
+- [Virsorter](https://github.com/simroux/VirSorter)
+- [Phaster](https://phaster.ca/)
+- [Phagefinder](http://phage-finder.sourceforge.net/)
+
+#### Phaster
+
+Because of the simplicity and the high quality of the tool it is always good to start of with Phaster when searching for Prophages. 
+Phaster is a great tool that searches via homology for known phage genes and tries to identify and illustrate the boundaries of putative prophages. 
+Here we use the online version of [Phaster](https://phaster.ca/). 
+However we can also submit via wget. 
+
+
+```{bash preparation }
 ##----------------------------
 ##---bring local
 ## This step is in order to bring a file or directory to the local
@@ -102,6 +120,7 @@ scp -r vincent@130.223.51.116:/data/Project/Bifidos/Genome_dataset/all_Bifido_Ge
 ##----------------------------
 ##-----Post to phaster.ca
 ## This is how you post a mutlicontig fasta file (max. 26mb) to phaster
+## we can also do this online 
 ##----------------------------
 
 
@@ -119,7 +138,9 @@ wget --post-file="all_Bifido_genomes_merged_0.fasta" "http://phaster.ca/phaster_
 
 ## Virsorter
 
-[Virsorter](https://peerj.com/articles/985/) is another tool that predicst phage contigs.
+A slightly more complicated and extensive tool for prophage annotation is [Virsorter](https://peerj.com/articles/985/) 
+Virsorter however does not have an online version and the installation is rather tedious. 
+Here, I run Virsorter on the all samples. Additionally, I parse the output file to get all the necassary annotation files that are produced by Virsorter. 
 
 ```{bash}
 
@@ -152,7 +173,7 @@ grep -v "^#" /data/Project/Bifidos/03_ProphageDectection/Virsorter/${sample}//VI
 
 
  ##------------------------------------------------------------------
- ##parse the coutput file
+ ##parse the output file
  ##------------------------------------------------------------------
 
 grep "## Contig_id" /data/Project/Bifidos/03_ProphageDectection/Virsorter/2791355241/VIRSorter_global-phage-signal.csv |head -1 |sed 's/^## //g'|awk -F "," '{OFS=","}{print $0,"phageType","certainty","strain"}' > /data/Project/Bifidos/03_ProphageDectection/Virsorter/VIRSorter_global-phage-signal_cleaned_all.csv
@@ -227,9 +248,9 @@ VIRSorter_contigs
 
 #### VirFam
 
-VirFam is a good online resource that annotates the morophogenes of phages and makes a taxonomic classification.
-
-First we need to extract all proteins and fasta files. 
+[VirFam](http://biodev.cea.fr/virfam/) is an excilent online resource that annotates the morophogenes of phages and makes a first taxonomic classification.
+In order to submit to Virfam we have to extract 
+First we need to extract all proteins fasta files created by Virsorter in order to submit to Virfam.
 ```{bash}
 ##============================
 ###location Prophages in genome
@@ -335,9 +356,9 @@ done # sample
 cat /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/FNA/*.fna > /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/FNA/merged_all_Bifido_phages.fasta
 
 
-##-----------
+##============================
 ###GBF
-##-----------
+##============================
 rm -r /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/GBF/
 mkdir -p /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/GBF/
 for sample in $(sed '1d' /data/Project/Bifidos/Genome_dataset/Bifido_Genomes_SAGE_2020_woOutgroups_onlySequenced.csv |cut -f 3
@@ -456,9 +477,10 @@ cat /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/Our
  
  
 ```
-move the phages local
+
 
 ```{bash}
+#move the phages local
 mkdir -p ~/Desktop/Projects/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/
 scp -r vincent@130.223.51.116:/data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/ ~/Desktop/Projects/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/
 
@@ -490,57 +512,12 @@ ggplot(X2842527608_depth_phage_01_data,aes(x=Nucleotide,y=Coverage))+geom_line()
 
 
 
-```{bash}
-###extract Genbanks
-
-
-mkdir -p /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/{faa,fasta}
-
-for sample in $(sed '1d' /data/Project/Bifidos/Genome_dataset/Bifido_Genomes_SAGE_2020_woOutgroups.csv |cut -f 2)
-do
-echo ${sample}
-done
-### amino acid
-cd /data/Project/Bifidos/03_ProphageDectection/Virsorter/${sample}/Predicted_viral_sequences/
-python2 /home/vincent/apps/genbank_to_fasta_v1.2/genbank_to_fasta.py -i VIRSorter_prophages_cat-4.gb -o tmp.faa -s aa
-python2 /home/vincent/apps/genbank_to_fasta_v1.2/genbank_to_fasta.py -i VIRSorter_prophages_cat-5.gb -o tmp_2.faa -s aa
-python2 /home/vincent/apps/genbank_to_fasta_v1.2/genbank_to_fasta.py -i VIRSorter_prophages_cat-6.gb -o tmp_3.faa -s aa
-cat tmp.faa tmp_2.faa tmp_3.faa > tmp_all.faa
-for phagezzz in $(grep ">" tmp_all.faa  |awk -F "_gene_" '{print $1}'|sed 's/>//g'|sort|uniq)
-do
-
-echo -e ${phagezzz}
-
-done
-rm ${phagezzz}.faa
-    for genesss in $(grep "${phagezzz}" tmp_all.faa |sed 's/>//g')
-    do
-    
-    samtools faidx tmp_all.faa ${genesss} >> ${phagezzz}.faa
-    
-    
-    done # genesss
-
-done #phagezzz
- 
- done # sample
- 
- 
- 
-/usr/bin/bp_genbank2gff3 VIRSorter_prophages_cat-6.gb
-
-grep "^#" -v VIRSorter_prophages_cat-6.gb.gff |grep "^VIRSorter"|cut -f 1|sort|uniq -c
-
-```
-
-
 ##Mapping coverage 
 
-Here we try to see if the annotated prophages are active. If a phage is active we would expect it to have an different coverage in comparison to the host genome. 
+In order to see if the putative prophages are active we look at the sequencing coverage. If a phage is active we would expect it to have an different coverage in comparison to the host genome. 
 Therefore we will look what the read coverage is at the site of the prophages. To do this we need to first map the raw reads to the reference genome. 
 
 ```{bash}
-
 ##==============================
 ##------------------move from local
 ##==============================
@@ -551,6 +528,10 @@ scp /run/user/1000/gvfs/smb-share:server=nas.unil.ch,share=fbm,user=ad%5Cvsomerv
 scp /run/user/1000/gvfs/smb-share:server=nas.unil.ch,share=fbm,user=ad%5Cvsomervi/DMF/GROUPS/gr_Engel/lab_resources/NGS_data/Genomes/190927_SAGE_MiniSeq/Fastq/4_*.fastq.gz vincent@130.223.51.116:/data/Project/Bifidos/rawData
 scp /run/user/1000/gvfs/smb-share:server=nas.unil.ch,share=fbm,user=ad%5Cvsomervi/DMF/GROUPS/gr_Engel/lab_resources/NGS_data/Genomes/190927_SAGE_MiniSeq/Fastq/12_*.fastq.gz vincent@130.223.51.116:/data/Project/Bifidos/rawData
 scp /run/user/1000/gvfs/smb-share:server=nas.unil.ch,share=fbm,user=ad%5Cvsomervi/DMF/GROUPS/gr_Engel/lab_resources/NGS_data/Genomes/190927_SAGE_MiniSeq/Fastq/6_*.fastq.gz vincent@130.223.51.116:/data/Project/Bifidos/rawData
+```
+
+
+```{bash}
 ##==============================
 ##------------------rename
 ##==============================
@@ -570,11 +551,13 @@ done #readzz
 done #genomesss
 
 ```
-#### rawRead mapping
 
-Here, we map the prepared rawRead files to the assembled genomes. 
 
 ```{bash}
+##==============================
+#### rawRead mapping
+##==============================
+
 threads=35
 rm -r /data/Project/Bifidos/04_GenomeCoverage
 for genomesss in $(sed '1d' /data/Project/Bifidos/Genome_dataset/Bifido_Genomes_SAGE_2020_woOutgroups_onlySequenced.csv |cut -f 3)
@@ -606,9 +589,9 @@ qualimap bamqc -bam /data/Project/Bifidos/04_GenomeCoverage/bwaMapping/${genomes
     
 done #genomesss
 
-###---------------------
+##==============================
 #get phage location
-###---------------------
+##==============================
 rm /data/Project/Bifidos/04_GenomeCoverage/Coverage/*_Phage_locations.bed
 for sample in $(sed '1d' /data/Project/Bifidos/Genome_dataset/Bifido_Genomes_SAGE_2020_woOutgroups_onlySequenced.csv |cut -f 3)
 do
@@ -637,9 +620,9 @@ done #genomesss
 cat /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/Coverage_genomes/*_Phage_locations.bed > /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/Coverage_genomes/All_phage_location.txt
 
 
-#####------------------------
+##==============================
 ##only contigs with phages
-#####------------------------
+##==============================
 cat /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/BacterialGenomes/*.fna >  /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/BacterialGenomes/all_our_bifido_bacteria.fasta
 rm /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/BacterialGenomes/all_our_bifido_bacteria_contigsWithPhages.fasta
 for contigss in $(cut -f 1 /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/Coverage_genomes/All_phage_location.txt)
@@ -650,9 +633,9 @@ samtools faidx /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains
 done
 
 
-#####------------------------
+##==============================
 ##only depth of contigs with pahges
-#####------------------------
+##==============================
 cat /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/Coverage_genomes/*_depth.txt >  /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/Coverage_genomes/completeDepth.txt
 rm /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/Coverage_genomes/completeDepth_onlyContigswithPhages.txt
 for contigss in $(cut -f 1 /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/Coverage_genomes/All_phage_location.txt)
@@ -665,8 +648,11 @@ rm /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurB
 
 ```
 
-bring local
+
 ```{bash}
+##==============================
+##bring local
+##==============================
 mkdir -p ~/Desktop/Projects/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/
 scp -r vincent@130.223.51.116:/data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/ ~/Desktop/Projects/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/
 
@@ -675,13 +661,17 @@ scp -r vincent@130.223.51.116:/data/Project/Bifidos/03_ProphageDectection/Virsor
 
 ## Bifido diveristy on NCBI
 
+Whenever you want to compare a genome we need to first gather a number of genomes to compare to. 
+It is always advisable to scan through NCBI RefSeq what is currently available. 
 Here, I explore and download the Bifido diversity on NCBI RefSeq.
 NCBI Refseq are currated and selecte high quality genome assemblies.
 
+###### bacteria
 
 ```{bash}
-
+##==============================
  #----------bacteria
+ ##==============================
  mkdir -p /data/Project/Bifidos/Genome_dataset/all_Bifido_NCBI/log
 curl 'ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt' > /data/Project/Bifidos/Genome_dataset/all_Bifido_NCBI/log/bacteria_genomic_file.txt
 
@@ -690,10 +680,15 @@ grep "Bifidobacterium" -c /data/Project/Bifidos/Genome_dataset/all_Bifido_NCBI/l
  
 ```
 
+###### phages
 
 Here, I look at the phage diversity of phages.
 
 ```{bash}
+
+##==============================
+ #----------phages
+ ##==============================
 curl 'ftp://ftp.ncbi.nlm.nih.gov/genomes/genbank/viral/assembly_summary.txt' > /data/Project/Bifidos/Genome_dataset/all_Bifido_NCBI/log/phage_genomic_file.txt
 
 grep "Bifidobacterium" -c /data/Project/Bifidos/Genome_dataset/all_Bifido_NCBI/log/phage_genomic_file.txt| awk -F "\t" 'BEGIN{OFS="\t"}{if($11=="latest" && $12="complete")print $0}' > \
@@ -721,9 +716,18 @@ wget --input /data/Project/Bifidos/Genome_dataset/all_Bifido_NCBI/log/phage_geno
 
 ```
 
-### download German's DB
+## download German's DB
+
+Additionally, to NCBI it is always advisable to consult species or field specific literature. 
+In our case we know that German has previously looked at Bifido phages [his paper](https://www.pnas.org/content/117/13/7355/tab-article-info)
+Therefore we also download his prepared genome list from [github](https://github.com/geboro/HoneyBee-Virome-2020).
 
 ```{bash}
+
+##==========
+##-------download faa from german's github
+##==========
+
 rm /data/Project/Bifidos/06_vContact/run/tmp*
 cd /data/Project/Bifidos/Bifido_PHAGES/Genomes/faa
 rm ViralClusterContig*
@@ -742,7 +746,14 @@ samtools faidx /data/Project/Bifidos/Bifido_PHAGES/Genomes/faa/ViralClusterConti
 done
 cat /data/Project/Bifidos/Bifido_PHAGES/Genomes/faa/ViralClusterContigs_cleaned.faa > /data/Project/Bifidos/Bifido_PHAGES/Genomes/faa/ViralClusterContigs.faa
 ```
-##Vcontact
+
+
+## Vcontact
+
+Finally, with all these genomes we can try to creat a similiarty network. 
+Therefore we use [Vcontact2](https://bitbucket.org/MAVERICLab/vcontact2/src). Vcontact2 is a very good tool that comparse the presence and other of putative viral genes/clusters. However it is not very inuitive to run. Therefore I precompute the interaction network. 
+
+Something to keep in mind is that the interaction network is only as extensive as our data is. Therefore we should consider to scan the internet and include additional Bifido phage genomes into this analysis. 
 
 ```{bash}
 ##================
@@ -798,12 +809,15 @@ mkdir -p /data/Project/Bifidos/06_vContact/OurPhages_and_GermansPhages
 
 ```
 
+#### analysis
 
+After running Vcontact2 we can make use of the mainly three files:
 
-####analysis
+- c1.ntw: actual pairwise interaction between the different phage genomes. 
+- genome_by_genome_overview.csv: description of the phages included in the analysis
+- c1.clusters: the different clusters (Viral cluster) assigned by Vcontact2. These VC correspond to different viral species. 
 
-
-```{r}
+```{r, eval=TRUE}
 library(ggplot2)
 library(readr)
 library(plyr)
@@ -815,13 +829,13 @@ library(igraph)
  Phages_names <- read_csv("~/Desktop/Projects/Bifidos/06_vContact/OurPhages_and_GermansPhages/allPhages_vContact/genome_by_genome_overview.csv")
  own_clustering_new <- read_csv("~/Desktop/Projects/Bifidos/06_vContact/OurPhages_and_GermansPhages/allPhages_vContact//c1.clusters") %>% as.data.frame()
  own_clustering_complete <- read_csv("~/Desktop/Projects/Bifidos/06_vContact/OurPhages_and_GermansPhages/allPhages_vContact/genome_by_genome_overview.csv")
- ownPhages <- read_table2("Desktop/Projects/Bifidos/06_vContact/OurPhages_and_GermansPhages/allPhages_vContact/c1.ntw",  col_names = c("from","to","power"))
+ ownPhages <- read_table2("~/Desktop/Projects/Bifidos/06_vContact/OurPhages_and_GermansPhages/allPhages_vContact/c1.ntw",  col_names = c("from","to","power"))
  
  own_clustering_unnested <- own_clustering_new %>% 
  mutate(Members = strsplit(as.character(Members), " ")) %>% 
     unnest(Members)
  
- str_split_fixed(own_clustering_unnested$Members, "~", 3)[,1]  %>% table()
+ # str_split_fixed(own_clustering_unnested$Members, "~", 3)[,1]  %>% table()
     ##------------------
  ###---------------1. filter:
    ##------------------
@@ -837,8 +851,8 @@ library(igraph)
  tmp2 <-  ownPhages[grep("VIRSorter",ownPhages$from),"from"] %>% unique()
  ownPhagesNames <- rbind(tmp1,tmp2)
 own_cluster_sub_new <- ownPhages_sub %>% filter(from %in%  ownPhagesNames$from |to %in%  ownPhagesNames$from) 
- unique(ownPhages_sub$from) %>% length
-  unique(own_cluster_sub_new$from)  %>% length
+ # unique(ownPhages_sub$from) %>% length
+  # unique(own_cluster_sub_new$from)  %>% length
   
   
   
@@ -856,8 +870,8 @@ own_cluster_sub_new <- ownPhages_sub %>% filter(from %in%  ownPhagesNames$from |
  library(ITNr)
  library(intergraph)
  
- net<-asNetwork(Sterm_net) #ggnetwork requires a network object
- n<-ggnetwork(net)
+ net <-asNetwork(Sterm_net) #ggnetwork requires a network object
+ n <-ggnetwork(net)
   ##------------------
  ##color and size change
   ##------------------
@@ -872,12 +886,12 @@ own_cluster_sub_new <- ownPhages_sub %>% filter(from %in%  ownPhagesNames$from |
  ##extend
  ##------------------
  nExtended <-  merge(n, Phages_names, by.y="Genome",by.x="vertex.names",all.x = TRUE) 
- nrow(n)
+ # nrow(n)
  nExtended <-  merge(n, Phages_names, by.y="Genome",by.x="vertex.names",all.x = TRUE) 
- nrow(nExtended)
- nExtended
+ # nrow(nExtended)
+ # nExtended
  # ccolnames(nExtended)
-colnames(nExtended)
+# colnames(nExtended)
 colnames(nExtended) <- revalue(colnames(nExtended), c("Adj P-value"="Adj_P_value","Genera in VC"="Genera_in_VC","Topology Confidence Score"="Topology_Confidence_Score","Genus Confidence Score"="Genus_Confidence_Score"))
  ##------------------
  ##plot
@@ -889,13 +903,14 @@ colnames(nExtended) <- revalue(colnames(nExtended), c("Adj P-value"="Adj_P_value
     scale_size_manual(values=as.numeric(size))+
    # guides(color=FALSE,size=FALSE)+ #Remove legends
  theme_blank()+theme(legend.title = element_blank())
- networkplot
+ # networkplot
  
  library(plotly)
  ggp <- ggplotly(networkplot)
  htmlwidgets::saveWidget(ggp, "~/Desktop/Projects/Bifidos/06_vContact/OurPhages_and_GermansPhages/allPhages_vContact/networkPlot.html")
  # View(nExtended)
  # unique(nExtended$vertex.names)
+ ggp
 ```
 
 
@@ -905,6 +920,14 @@ colnames(nExtended) <- revalue(colnames(nExtended), c("Adj P-value"="Adj_P_value
 CRISPRs are the immune system of bacteria. 
 
 Here, we look at the CRISPR spacer diversity in order to identifiy with which phages the bacteria have come into contact. 
+A CRISPR-Cas region can be mainly diveded into two regions:
+1. CRISPR array (repeats and spacers)
+2. Cas-genes
+
+There are different tools to predict CRISPR and Cas regions. Most commonly are the following:
+- [PilerCR](https://www.drive5.com/pilercr/)
+- [CRISPRcasfinder](https://crisprcas.i2bc.paris-saclay.fr/)
+
 Therefore we first predict CRISPR spacers from the genomes
 
 ```{bash}
