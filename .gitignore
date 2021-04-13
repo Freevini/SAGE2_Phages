@@ -1,0 +1,8 @@
+builder_py/
+build.log
+numpy-1.16.6-cp27-cp27mu-manylinux1_x86_64.whl
+numpy-1.18.4-cp36-cp36m-manylinux1_x86_64.whl
+Pillow-6.2.2-cp27-cp27mu-manylinux1_x86_64.whl
+Pillow-7.1.2-cp36-cp36m-manylinux1_x86_64.whl
+six-1.14.0-py2.py3-none-any.whl
+wxPython-4.1.0.tar.gz
