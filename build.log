@@ -1,0 +1,40 @@
+DEPRECATION: Python 2.7 reached the end of its life on January 1st, 2020. Please upgrade your Python as Python 2.7 is no longer maintained. pip 21.0 will drop support for Python 2.7 in January 2021. More details about Python 2 support in pip, can be found at https://pip.pypa.io/en/latest/development/release-process/#python-2-support
+Created temporary directory: /tmp/pip-ephem-wheel-cache-7FR5Z3
+Created temporary directory: /tmp/pip-req-tracker-2CFnc_
+Initialized build tracking at /tmp/pip-req-tracker-2CFnc_
+Created build tracker: /tmp/pip-req-tracker-2CFnc_
+Entered build tracker: /tmp/pip-req-tracker-2CFnc_
+Created temporary directory: /tmp/pip-wheel-yrjGPu
+WARNING: Requirement 'wxPython-4.0.1.tar.gz' looks like a filename, but the file does not exist
+Processing ./wxPython-4.0.1.tar.gz
+  Created temporary directory: /tmp/pip-req-build-Vu_aga
+ERROR: Exception:
+Traceback (most recent call last):
+  File "/home/vincent/miniconda3/lib/python2.7/site-packages/pip/_internal/cli/base_command.py", line 188, in _main
+    status = self.run(options, args)
+  File "/home/vincent/miniconda3/lib/python2.7/site-packages/pip/_internal/cli/req_command.py", line 185, in wrapper
+    return func(self, options, args)
+  File "/home/vincent/miniconda3/lib/python2.7/site-packages/pip/_internal/commands/wheel.py", line 160, in run
+    reqs, check_supported_wheels=True
+  File "/home/vincent/miniconda3/lib/python2.7/site-packages/pip/_internal/resolution/legacy/resolver.py", line 179, in resolve
+    discovered_reqs.extend(self._resolve_one(requirement_set, req))
+  File "/home/vincent/miniconda3/lib/python2.7/site-packages/pip/_internal/resolution/legacy/resolver.py", line 362, in _resolve_one
+    abstract_dist = self._get_abstract_dist_for(req_to_install)
+  File "/home/vincent/miniconda3/lib/python2.7/site-packages/pip/_internal/resolution/legacy/resolver.py", line 314, in _get_abstract_dist_for
+    abstract_dist = self.preparer.prepare_linked_requirement(req)
+  File "/home/vincent/miniconda3/lib/python2.7/site-packages/pip/_internal/operations/prepare.py", line 412, in prepare_linked_requirement
+    hashes=hashes,
+  File "/home/vincent/miniconda3/lib/python2.7/site-packages/pip/_internal/operations/prepare.py", line 203, in unpack_url
+    unpack_file(file.path, location, file.content_type)
+  File "/home/vincent/miniconda3/lib/python2.7/site-packages/pip/_internal/utils/unpacking.py", line 256, in unpack_file
+    tarfile.is_tarfile(filename) or
+  File "/home/vincent/miniconda3/lib/python2.7/tarfile.py", line 2624, in is_tarfile
+    t = open(name)
+  File "/home/vincent/miniconda3/lib/python2.7/tarfile.py", line 1675, in open
+    return func(name, "r", fileobj, **kwargs)
+  File "/home/vincent/miniconda3/lib/python2.7/tarfile.py", line 1740, in gzopen
+    fileobj = gzip.GzipFile(name, mode, compresslevel, fileobj)
+  File "/home/vincent/miniconda3/lib/python2.7/gzip.py", line 94, in __init__
+    fileobj = self.myfileobj = __builtin__.open(filename, mode or 'rb')
+IOError: [Errno 2] No such file or directory: '/home/vincent/Desktop/Projects/Bifidos/99_script/SAGE2_Phages/wxPython-4.0.1.tar.gz'
+Removed build tracker: '/tmp/pip-req-tracker-2CFnc_'

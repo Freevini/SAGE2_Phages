@@ -873,9 +873,10 @@ library(igraph)
    ##------------------
  ##connections that have a higher qualtiy than 4 (decided on distribution plot)
  ownPhages_sub <- ownPhages[ownPhages$power>4,]
- 
- 
- 
+ dim(ownPhages_sub)
+ ownPhages_sub <- ownPhages_sub %>% filter(!from %in% c("VIRSorter_Ga0401713_04","VIRSorter_Ga0401710_02") )%>% filter(!to %in% c("VIRSorter_Ga0401713_04","VIRSorter_Ga0401710_02"))
+  dim(ownPhages_sub_tmp)
+
    ##------------------
  ###---------------2. filter:
    ##------------------ 
@@ -896,6 +897,7 @@ own_cluster_sub_new <- ownPhages_sub %>% filter(from %in%  ownPhagesNames$from |
  ggplot(own_cluster_sub_new,aes(x=power))+geom_histogram(binwidth=1)
  
  write_csv(own_cluster_sub_new,path="~/Desktop/Projects/Bifidos/06_vContact/OurPhages_and_GermansPhages/allPhages_vContact/Streptococcus_phage_betwork_connections.txt",col_names = TRUE)
+ 
  Sterm_net <- graph_from_data_frame(own_cluster_sub_new,direct=F)
  
  library(ggnetwork)
@@ -947,7 +949,7 @@ dev.off()
 
  library(plotly)
  ggp <- ggplotly(networkplot)
- htmlwidgets::saveWidget(ggp, "~/Desktop/Projects/Bifidos/06_vContact/OurPhages_and_GermansPhages/allPhages_vContact/networkPlot.html")
+ htmlwidgets::saveWidget(ggp, "~/Desktop/Projects/Bifidos/06_vContact/OurPhages_and_GermansPhages/allPhages_vContact/networkPlot_subset_corrected.html")
  # View(nExtended)
  # unique(nExtended$vertex.names)
  ggp
@@ -1002,8 +1004,8 @@ Therefore we first predict CRISPR spacers from the genomes
     done 
     
 ```
-
-or here form the CRISPRcasfinder output
+...or
+Here, we extract the CRISPR spacers from the CRISPRcasfinder output. 
 
 ```{bash}
 mkdir -p /home/vincent/Desktop/Projects/Bifidos/07_CRISPR_cas/spacers/
@@ -1025,6 +1027,8 @@ done
 
 ######unque CRISPR spacers
 
+We can look if the extracted CRISPR spacers are unique or shared amongst the different genomes. 
+
 ```{bash}
 
 
@@ -1036,16 +1040,38 @@ cd-hit-est -i /home/vincent/Desktop/Projects/Bifidos/07_CRISPR_cas/spacers/all_s
 
 ```
 
-
-##### blast spacers
-first blast against bifidobacterium phages
-
+##### CRISPR description
 ```{bash}
 /home/vincent/Desktop/Projects/Bifidos/07_CRISPR_cas/spacers/all_spacers.fasta
 
 scp /home/vincent/Desktop/Projects/Bifidos/07_CRISPR_cas/spacers/all_spacers.fasta vincent@130.223.51.116:/data/Project/Bifidos/07_CRISPR_cas/spacers/all_spacers.fasta
 
+grep ">" /home/vincent/Desktop/Projects/Bifidos/07_CRISPR_cas/spacers/all_spacers.fasta  |sed 's/>//g' |awk -F "[_-]" '{OFS="\t"}{print $0, $1,$1"_"$2}' > /home/vincent/Desktop/Projects/Bifidos/07_CRISPR_cas/spacers/all_spacers.txt
+
 ```
+
+```{r}
+library(readr)
+all_spacers <- read_delim("~/Desktop/Projects/Bifidos/07_CRISPR_cas/spacers/all_spacers.txt", "\t", escape_double = FALSE, col_names = c("spacerName","Genome","arrayName"), trim_ws = TRUE)
+
+spacerDescrition <- ggplot(all_spacers,aes(x=Genome,fill=arrayName))+geom_bar()+theme_classic()
+
+
+ png("~/Desktop/Projects/Bifidos/07_CRISPR_cas/spacers/SpacerDescription.png", width = 3000, height = 1500,res=300)
+
+spacerDescrition
+
+dev.off()
+
+```
+
+
+
+##### blast spacers
+We know iteratively blast against the different blast DB. 
+
+first blast against bifidobacterium phages
+
 
 
 ```{bash}
@@ -1095,6 +1121,9 @@ against the own phages
 cat /data/Project/Bifidos/03_ProphageDectection/Virsorter/all_strains_social/OurBifidoPhages/FNA/VIRSorter_*.fna | sed 's/VIRSorter_//g' |sed 's/gene/g/g' >  \
 /data/Project/Bifidos/Germans_phages/all_bifiod/own_bifido_phages.txt
 
+
+cat /data/Project/Bifidos/Germans_phages/all_bifiod/all_bifido_phages.fasta \
+/data/Project/Bifidos/Germans_phages/all_bifiod/own_bifido_phages.txt > /data/Project/Bifidos/Germans_phages/all_bifiod/own_bifido_phages_ncbi.txt
 
 makeblastdb -max_file_sz 1GB -in /data/Project/Bifidos/Germans_phages/all_bifiod/own_bifido_phages.txt \
  -out /data/Project/Bifidos/Germans_phages/all_bifiod/own_bifido_phages -parse_seqids -dbtype nucl
@@ -1181,4 +1210,166 @@ wc -l /data/Project/Bifidos/SPACER_blast/DB/prokaryoticDB_blast.txt
 
 
 ```
+transfer local
+```{bash}
+/data/Project/Bifidos/Germans_phages/all_bifiod/own_bifido_phages_ncbi.txt
 
+scp vincent@130.223.51.116:/data/Project/Bifidos/Germans_phages/all_bifiod/own_bifido_phages_ncbi.txt /home/vincent/Desktop/Projects/Bifidos
+
+```
+
+
+output of virus DB
+```{r}
+
+library(readr)
+library(ggplot2)
+library(tidyverse)
+virus_genomes_mapping <- read_csv("~/Desktop/Projects/Bifidos/07_CRISPR_cas/spacers/blast/viruses/BMTU5RA801R-Alignment-HitTable.csv", col_names = c("query acc.ver", "subject acc.ver", "% identity", "alignment length", "mismatches", "gap opens", "q. start", "q. end", "s. start", "s. end", "evalue", "bit score"))
+
+ggplot(virus_genomes_mapping, aes(x=`% identity`))+geom_histogram()+theme_classic()
+unique(virus_genomes_mapping_02$`query acc.ver`) %>% length()
+virus_genomes_mapping_02 <- virus_genomes_mapping %>% filter(`% identity`==100)
+unique(virus_genomes_mapping_02$`query acc.ver`) %>% length()
+
+# virus_genomes_mapping_02$evalue
+ggplot(virus_genomes_mapping_02, aes(x=`alignment length`))+geom_histogram()+theme_classic()
+ggplot(virus_genomes_mapping_02, aes(x=evalue))+geom_histogram()+theme_classic()
+virus_genomes_mapping_03 <- virus_genomes_mapping_02 %>% filter(evalue<0.1)
+unique(virus_genomes_mapping_03$`query acc.ver`) %>% length()
+
+```
+
+
+output of own DB and loca phages
+```{r}
+
+library(readr)
+library(ggplot2)
+library(tidyverse)
+
+library(ggplot2)
+library(readr)
+library(plyr)
+library(tidyverse)
+library(igraph)
+
+library(readr)
+library(ggplot2)
+library(tidyverse)
+# virus_genomes_mapping <- read_csv("~/Desktop/Projects/Bifidos/07_CRISPR_cas/spacers/blast/ownViruses/BMVNXDJ9114-Alignment-HitTable.csv")
+
+virus_genomes_mapping <- read_csv("~/Desktop/Projects/Bifidos/07_CRISPR_cas/spacers/blast/ownViruses/BMVNXDJ9114-Alignment-HitTable.csv", col_names = c("query acc.ver", "subject acc.ver", "% identity", "alignment length", "mismatches", "gap opens", "q. start", "q. end", "s. start", "s. end", "evalue", "bit score"))
+
+
+#tidyr
+virus_genomes_mapping_02 <- virus_genomes_mapping %>% filter(`% identity`==100)
+#basic
+# virus_genomes_mapping_02 <- virus_genomes_mapping[which(virus_genomes_mapping$`% identity`==100),]
+
+ggplot(virus_genomes_mapping, aes(x=`% identity`))+geom_histogram()+theme_classic()
+unique(virus_genomes_mapping_02$`query acc.ver`) %>% length()
+virus_genomes_mapping_02 <- virus_genomes_mapping %>% filter(`% identity`==100)
+unique(virus_genomes_mapping_02$`query acc.ver`) %>% length()
+
+# virus_genomes_mapping_02$evalue
+# ggplot(virus_genomes_mapping_02, aes(x=`alignment length`))+geom_histogram()+theme_classic()
+ggplot(virus_genomes_mapping_02, aes(x=evalue))+geom_histogram()+theme_classic()
+virus_genomes_mapping_03 <- virus_genomes_mapping_02 %>% filter(evalue<0.1)
+unique(virus_genomes_mapping_03$`query acc.ver`) %>% length()
+
+##only own and germans phages
+
+virus_genomes_mapping_04 <- virus_genomes_mapping_03[grep("_",virus_genomes_mapping_03$`subject acc.ver`),2] 
+
+# virus_genomes_mapping_germans <- virus_genomes_mapping_04[grep("GR7_",virus_genomes_mapping_04$`subject acc.ver`),2]
+# virus_genomes_mapping_germans_02 <- virus_genomes_mapping_04[grep("LD7_",virus_genomes_mapping_04$`subject acc.ver`),2]
+# virus_genomes_mapping_assembled <- virus_genomes_mapping_04[grep("Ga0",virus_genomes_mapping_04$`subject acc.ver`),2]
+tmp1 <- str_split_fixed(virus_genomes_mapping_04$`subject acc.ver`, "_", 6)[,1] 
+tmp2 <- str_split_fixed(virus_genomes_mapping_04$`subject acc.ver`, "_", 6)[,2] 
+query <- paste(tmp1,"_",tmp2,sep="")
+
+
+for (rowzzz in query) {
+  print(rowzzz)
+  n$vertex.names[grep(rowzzz,n$vertex.names)] %>% as.character()
+ 
+}
+
+
+library(readr)
+own_cluster_sub_new <- read_csv("~/Desktop/Projects/Bifidos/06_vContact/OurPhages_and_GermansPhages/allPhages_vContact/Streptococcus_phage_betwork_connections.txt")
+ Sterm_net <- graph_from_data_frame(own_cluster_sub_new,direct=F)
+ 
+ library(ggnetwork)
+ library(ITNr)
+ library(intergraph)
+ 
+ net <-asNetwork(Sterm_net) #ggnetwork requires a network object
+ n <-ggnetwork(net)
+  ##------------------
+ ##color and size change
+  ##------------------
+ n$color <- as.character("Viral DB")
+
+ n$color[grep("VC_",n$vertex.names)] <- "Germans contigs"
+ n$color[grep("VIRSorter",n$vertex.names)] <- "Virsorter Contigs"
+ 
+for (rowzzz in query) {
+  print(rowzzz)
+  # n$vertex.names[grep(rowzzz,n$vertex.names)] %>% as.character()
+  n$color[grep(rowzzz,n$vertex.names)] <- "matched genomes"
+
+}
+ n$color = factor(n$color, levels=c("matched genomes","Virsorter Contigs","Germans contigs","Viral DB"))
+
+  
+   # n$vertex.names[grep("VIRSorter",n$vertex.names)]
+   
+ # n$color[grep("VC_",n$vertex.names)] <- "Germans contigs"
+ # n$color[grep("VIRSorter",n$vertex.names)] <- "Virsorter Contigs"
+ # n$color = factor(n$color, levels=c("Virsorter Contigs","Germans contigs","Viral DB"))
+ colorzzz <- c("pink","red","blue","grey50")
+ size <- c("6","4","2","1.5")
+ ##------------------
+ ##extend
+ ##------------------
+  Phages_names <- read_csv("~/Desktop/Projects/Bifidos/06_vContact/OurPhages_and_GermansPhages/allPhages_vContact/genome_by_genome_overview.csv")
+
+ nExtended <-  merge(n, Phages_names, by.y="Genome",by.x="vertex.names",all.x = TRUE) 
+ # nrow(n)
+ nExtended <-  merge(n, Phages_names, by.y="Genome",by.x="vertex.names",all.x = TRUE) 
+ # nrow(nExtended)
+ # nExtended
+ # ccolnames(nExtended)
+# colnames(nExtended)
+colnames(nExtended) <- revalue(colnames(nExtended), c("Adj P-value"="Adj_P_value","Genera in VC"="Genera_in_VC","Topology Confidence Score"="Topology_Confidence_Score","Genus Confidence Score"="Genus_Confidence_Score"))
+ ##------------------
+ ##plot
+ ##------------------
+ networkplot <- ggplot(nExtended, aes(x = x, y = y, xend = xend, yend = yend,text =paste("genome:", vertex.names,"\npower: ",power,"\nOrder: ",Order,"\nFamily: ",Family,"\nGenus: ",Genus,"\nVC: ",VC,"\nSize: ",Size,"\nAdj P-value: ",Adj_P_value,"\nGenera in VC: ",Genera_in_VC,"\nGenus_Confidence_ScoreC: ",Genus_Confidence_Score,"\nTopology_Confidence_Score: ",Topology_Confidence_Score))) + geom_edges(color = "lightgray") +
+   geom_nodes(aes(color = as.factor(color),size=as.factor(color))) +
+   # scale_fill_manual(values="gray41")+
+    scale_color_manual(values=colorzzz)+
+    scale_size_manual(values=as.numeric(size))+
+   # guides(color=FALSE,size=FALSE)+ #Remove legends
+ theme_blank()+theme(legend.title = element_blank())
+ # networkplot
+ 
+
+
+ png("~/Desktop/Projects/Bifidos/06_vContact/OurPhages_and_GermansPhages/allPhages_vContact/networkPlot_matched.png", width = 3000, height = 3000,res=300)
+
+networkplot
+
+dev.off()
+
+ library(plotly)
+ ggp <- ggplotly(networkplot)
+ htmlwidgets::saveWidget(ggp, "~/Desktop/Projects/Bifidos/06_vContact/OurPhages_and_GermansPhages/allPhages_vContact/networkPlot_matched.html")
+ # View(nExtended)
+ # unique(nExtended$vertex.names)
+ ggp
+
+
+```
